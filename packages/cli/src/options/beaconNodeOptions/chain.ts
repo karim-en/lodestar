@@ -7,9 +7,8 @@ export interface IChainArgs {
   "chain.disableBlsBatchVerify": boolean;
   "chain.persistInvalidSszObjects": boolean;
   "chain.proposerBoostEnabled": boolean;
+  "chain.maxSkipSlots"?: number,
   "safe-slots-to-import-optimistically": number;
-  // this is defined as part of IBeaconPaths
-  // "chain.persistInvalidSszObjectsDir": string;
 }
 
 export function parseArgs(args: IChainArgs): IBeaconNodeOptions["chain"] {
@@ -21,6 +20,7 @@ export function parseArgs(args: IChainArgs): IBeaconNodeOptions["chain"] {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
     persistInvalidSszObjectsDir: undefined as any,
     proposerBoostEnabled: args["chain.proposerBoostEnabled"],
+    maxSkipSlots: args["chain.maxSkipSlots"],
     safeSlotsToImportOptimistically: args["safe-slots-to-import-optimistically"],
   };
 }
@@ -63,6 +63,12 @@ Will double processing times. Use only for debugging purposes.",
     type: "boolean",
     description: "Enable proposer boost to reward a timely block",
     defaultDescription: String(defaultOptions.chain.proposerBoostEnabled),
+    group: "chain",
+  },
+
+  "chain.maxSkipSlots": {
+    type: "number",
+    description: "Refuse to skip more than this many slots when processing a block or attestation",
     group: "chain",
   },
 

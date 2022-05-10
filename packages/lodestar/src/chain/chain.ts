@@ -87,13 +87,13 @@ export class BeaconChain implements IBeaconChain {
 
   // Global state caches
   readonly pubkey2index: PubkeyIndexMap;
-  readonly index2pubkey: Index2PubkeyCache;
+  readonly opts: IChainOptions;
 
+  readonly index2pubkey: Index2PubkeyCache;
   protected readonly blockProcessor: BlockProcessor;
   protected readonly db: IBeaconDb;
   protected readonly logger: ILogger;
   protected readonly metrics: IMetrics | null;
-  protected readonly opts: IChainOptions;
   private readonly archiver: Archiver;
   private abortController = new AbortController();
 

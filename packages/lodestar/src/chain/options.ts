@@ -7,6 +7,7 @@ export type IChainOptions = BlockProcessOpts &
     blsVerifyAllMainThread?: boolean;
     blsVerifyAllMultiThread?: boolean;
     persistInvalidSszObjects?: boolean;
+    maxSkipSlots?: number;
     persistInvalidSszObjectsDir: string;
   };
 

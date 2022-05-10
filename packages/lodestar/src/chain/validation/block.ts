@@ -80,6 +80,17 @@ export async function validateGossipBlock(
     throw new BlockGossipError(GossipAction.IGNORE, {code: BlockErrorCode.PARENT_UNKNOWN, parentRoot});
   }
 
+
+  if (chain.opts.maxSkipSlots && blockSlot > parentBlock.slot + chain.opts.maxSkipSlots) {
+    if (blockSlot > parentBlock.slot + chain.opts.maxSkipSlots) {
+      throw new BlockGossipError(GossipAction.IGNORE, {
+        code: BlockErrorCode.TOO_MANY_SKIPPED_SLOTS,
+        parentSlot: parentBlock.slot,
+        blockSlot,
+      });
+    }
+  }
+
   // [REJECT] The block is from a higher slot than its parent.
   if (parentBlock.slot >= blockSlot) {
     throw new BlockGossipError(GossipAction.IGNORE, {
