@@ -37,6 +37,7 @@ import {ReqRespBlockResponse} from "../../../../src/network/reqresp/types";
 import {testLogger} from "../../logger";
 import {ReprocessController} from "../../../../src/chain/reprocess";
 import {createCachedBeaconStateTest} from "@chainsafe/lodestar-beacon-state-transition/test/utils/state";
+import {IChainOptions} from "../../../../lib/chain/options";
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 
@@ -54,6 +55,11 @@ export class MockBeaconChain implements IBeaconChain {
   readonly eth1 = new Eth1ForBlockProductionDisabled();
   readonly executionEngine = new ExecutionEngineDisabled();
   readonly config: IBeaconConfig;
+  readonly opts: IChainOptions = {
+    persistInvalidSszObjectsDir: "",
+    proposerBoostEnabled: false,
+    safeSlotsToImportOptimistically: 0,
+  };
   readonly anchorStateLatestBlockSlot: Slot;
 
   readonly bls: IBlsVerifier;
