@@ -36,6 +36,9 @@ describe("gossip block validation", function () {
     chain.forkChoice = forkChoice;
     regen = chain.regen = sinon.createStubInstance(StateRegenerator);
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    (chain as any).opts = {maxSkipSlots};
+
     verifySignature = sinon.stub();
     verifySignature.resolves(true);
     chain.bls = {verifySignatureSets: verifySignature};
@@ -103,9 +106,6 @@ describe("gossip block validation", function () {
   });
 
   it("TOO_MANY_SKIPPED_SLOTS", async function () {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    (chain as any).opts = {maxSkipSlots};
-
     // Return not known for proposed block
     forkChoice.getBlockHex.onCall(0).returns(null);
     // Return parent block with 1 slot way back than maxSkipSlots
