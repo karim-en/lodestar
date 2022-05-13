@@ -10,7 +10,7 @@ export type IChainOptions = BlockProcessOpts &
     blsVerifyAllMultiThread?: boolean;
     persistInvalidSszObjects?: boolean;
     maxSkipSlots?: number;
-    persistInvalidSszObjectsDir: string;
+    persistInvalidSszObjectsDir?: string;
   };
 
 export type BlockProcessOpts = {
