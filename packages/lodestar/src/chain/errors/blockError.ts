@@ -61,7 +61,7 @@ export enum BlockErrorCode {
   EXECUTION_ENGINE_ERROR = "BLOCK_ERROR_EXECUTION_ERROR",
   /** The attestation head block is too far behind the attestation slot, causing many skip slots.
   This is deemed a DoS risk */
-  TOO_MANY_SKIPPED_SLOTS = "TOO_MANY_SKIPPED_SLOTS"
+  TOO_MANY_SKIPPED_SLOTS = "TOO_MANY_SKIPPED_SLOTS",
 }
 
 type ExecutionErrorStatus = Exclude<
@@ -75,7 +75,7 @@ export type BlockErrorType =
   | {code: BlockErrorCode.FUTURE_SLOT; blockSlot: Slot; currentSlot: Slot}
   | {code: BlockErrorCode.STATE_ROOT_MISMATCH}
   | {code: BlockErrorCode.GENESIS_BLOCK}
-  | {code: BlockErrorCode.TOO_MANY_SKIPPED_SLOTS, parentSlot: Slot, blockSlot: Slot}
+  | {code: BlockErrorCode.TOO_MANY_SKIPPED_SLOTS; parentSlot: Slot; blockSlot: Slot}
   | {code: BlockErrorCode.WOULD_REVERT_FINALIZED_SLOT; blockSlot: Slot; finalizedSlot: Slot}
   | {code: BlockErrorCode.ALREADY_KNOWN; root: RootHex}
   | {code: BlockErrorCode.REPEAT_PROPOSAL; proposerIndex: ValidatorIndex}

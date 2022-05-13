@@ -7,7 +7,7 @@ export interface IChainArgs {
   "chain.disableBlsBatchVerify": boolean;
   "chain.persistInvalidSszObjects": boolean;
   "chain.proposerBoostEnabled": boolean;
-  "chain.maxSkipSlots"?: number,
+  "chain.maxSkipSlots"?: number;
   "safe-slots-to-import-optimistically": number;
 }
 
