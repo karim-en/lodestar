@@ -67,6 +67,7 @@ Will double processing times. Use only for debugging purposes.",
   },
 
   "chain.maxSkipSlots": {
+    hidden: true,
     type: "number",
     description: "Refuse to skip more than this many slots when processing a block or attestation",
     group: "chain",
