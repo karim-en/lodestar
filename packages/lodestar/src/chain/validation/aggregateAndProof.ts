@@ -1,4 +1,5 @@
-import {ValidatorIndex} from "@chainsafe/lodestar-types";
+import {toHexString} from "@chainsafe/ssz";
+import {ssz, ValidatorIndex} from "@chainsafe/lodestar-types";
 import {
   phase0,
   allForks,
@@ -6,14 +7,15 @@ import {
   isAggregatorFromCommitteeLength,
 } from "@chainsafe/lodestar-beacon-state-transition";
 import {IBeaconChain} from "..";
-import {getSelectionProofSignatureSet, getAggregateAndProofSignatureSet} from "./signatureSets";
-import {AttestationError, AttestationErrorCode, GossipAction} from "../errors";
-import {getCommitteeIndices, verifyHeadBlockAndTargetRoot, verifyPropagationSlotRange} from "./attestation";
-import {RegenCaller} from "../regen";
+import {AttestationError, AttestationErrorCode, GossipAction} from "../errors/index.js";
+import {RegenCaller} from "../regen/index.js";
+import {getSelectionProofSignatureSet, getAggregateAndProofSignatureSet} from "./signatureSets/index.js";
+import {getCommitteeIndices, verifyHeadBlockAndTargetRoot, verifyPropagationSlotRange} from "./attestation.js";
 
 export async function validateGossipAggregateAndProof(
   chain: IBeaconChain,
-  signedAggregateAndProof: phase0.SignedAggregateAndProof
+  signedAggregateAndProof: phase0.SignedAggregateAndProof,
+  skipValidationKnownAttesters = false
 ): Promise<{indexedAttestation: phase0.IndexedAttestation; committeeIndices: ValidatorIndex[]}> {
   // Do checks in this order:
   // - do early checks (w/o indexed attestation)
@@ -24,7 +26,9 @@ export async function validateGossipAggregateAndProof(
 
   const aggregateAndProof = signedAggregateAndProof.message;
   const aggregate = aggregateAndProof.aggregate;
+  const {aggregationBits} = aggregate;
   const attData = aggregate.data;
+  const attDataRoot = toHexString(ssz.phase0.AttestationData.hashTreeRoot(attData));
   const attSlot = attData.slot;
   const attEpoch = computeEpochAtSlot(attSlot);
   const attTarget = attData.target;
@@ -43,11 +47,23 @@ export async function validateGossipAggregateAndProof(
   // [IGNORE] The aggregate is the first valid aggregate received for the aggregator with
   // index aggregate_and_proof.aggregator_index for the epoch aggregate.data.target.epoch.
   const aggregatorIndex = aggregateAndProof.aggregatorIndex;
-  if (chain.seenAggregators.isKnown(targetEpoch, aggregatorIndex)) {
+  if (!skipValidationKnownAttesters) {
+    if (chain.seenAggregators.isKnown(targetEpoch, aggregatorIndex)) {
+      throw new AttestationError(GossipAction.IGNORE, {
+        code: AttestationErrorCode.AGGREGATOR_ALREADY_KNOWN,
+        targetEpoch,
+        aggregatorIndex,
+      });
+    }
+  }
+
+  // _[IGNORE]_ A valid aggregate attestation defined by `hash_tree_root(aggregate.data)` whose `aggregation_bits`
+  // is a non-strict superset has _not_ already been seen.
+  if (chain.seenAggregatedAttestations.isKnown(targetEpoch, attDataRoot, aggregationBits)) {
     throw new AttestationError(GossipAction.IGNORE, {
-      code: AttestationErrorCode.AGGREGATOR_ALREADY_KNOWN,
+      code: AttestationErrorCode.ATTESTERS_ALREADY_KNOWN,
       targetEpoch,
-      aggregatorIndex,
+      aggregateRoot: attDataRoot,
     });
   }
 
@@ -122,6 +138,12 @@ export async function validateGossipAggregateAndProof(
   }
 
   chain.seenAggregators.add(targetEpoch, aggregatorIndex);
+  chain.seenAggregatedAttestations.add(
+    targetEpoch,
+    attDataRoot,
+    {aggregationBits, trueBitCount: attestingIndices.length},
+    false
+  );
 
   return {indexedAttestation, committeeIndices};
 }

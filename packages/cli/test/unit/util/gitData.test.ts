@@ -1,24 +1,22 @@
-import {expect} from "chai";
-import child_process from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import {fileURLToPath} from "node:url";
+import {expect} from "chai";
 import findUp from "find-up";
-import {gitDataPath, readGitDataFile} from "../../../src/util/gitData/gitDataPath";
-import {getGitData} from "../../../src/util";
+import {gitDataPath, readGitDataFile} from "../../../src/util/gitData/gitDataPath.js";
+import {getGitData} from "../../../src/util/index.js";
 
-const WRITE_GIT_DATA_CMD = "npm run write-git-data";
+// Global variable __dirname no longer available in ES6 modules.
+// Solutions: https://stackoverflow.com/questions/46745014/alternative-for-dirname-in-node-js-when-using-es6-modules
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-describe("util / gitData", () => {
-  before(() => {
-    const pkgJsonPath = findUp.sync("package.json", {cwd: __dirname});
-    if (!pkgJsonPath) {
-      throw Error("No package.json found");
-    }
-
-    const pkgJsonDir = path.resolve(path.dirname(pkgJsonPath));
-    child_process.execSync(WRITE_GIT_DATA_CMD, {cwd: pkgJsonDir});
-  });
-
+describe("util / gitData", function () {
+  // .gitData file is created at build time with the command
+  // ```
+  // npm run write-git-data
+  // ```
+  // If this step fails run that command. This could happen when running tests before building.
   it("gitData file must exist", () => {
     const gitData = readGitDataFile();
 

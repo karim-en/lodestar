@@ -8,18 +8,18 @@ import {toHexString} from "@chainsafe/ssz";
 import {IForkChoice, IProtoBlock, ExecutionStatus, assertValidTerminalPowBlock} from "@chainsafe/lodestar-fork-choice";
 import {IChainForkConfig} from "@chainsafe/lodestar-config";
 import {ILogger} from "@chainsafe/lodestar-utils";
-import {IMetrics} from "../../metrics";
-import {IExecutionEngine} from "../../executionEngine";
-import {BlockError, BlockErrorCode} from "../errors";
-import {IBeaconClock} from "../clock";
-import {BlockProcessOpts} from "../options";
-import {IStateRegenerator, RegenCaller} from "../regen";
-import {IBlsVerifier} from "../bls";
-import {FullyVerifiedBlock, PartiallyVerifiedBlock} from "./types";
-import {ExecutePayloadStatus} from "../../executionEngine/interface";
-import {byteArrayEquals} from "../../util/bytes";
-import {IEth1ForBlockProduction} from "../../eth1";
-import {POS_PANDA_MERGE_TRANSITION_BANNER} from "./utils/pandaMergeTransitionBanner";
+import {IMetrics} from "../../metrics/index.js";
+import {IExecutionEngine} from "../../executionEngine/index.js";
+import {BlockError, BlockErrorCode} from "../errors/index.js";
+import {IBeaconClock} from "../clock/index.js";
+import {BlockProcessOpts} from "../options.js";
+import {IStateRegenerator, RegenCaller} from "../regen/index.js";
+import {IBlsVerifier} from "../bls/index.js";
+import {ExecutePayloadStatus} from "../../executionEngine/interface.js";
+import {byteArrayEquals} from "../../util/bytes.js";
+import {IEth1ForBlockProduction} from "../../eth1/index.js";
+import {FullyVerifiedBlock, PartiallyVerifiedBlock} from "./types.js";
+import {POS_PANDA_MERGE_TRANSITION_BANNER} from "./utils/pandaMergeTransitionBanner.js";
 
 export type VerifyBlockModules = {
   bls: IBlsVerifier;
@@ -270,7 +270,6 @@ export async function verifyBlockStateTransition(
       // child block will cause it to replay
 
       case ExecutePayloadStatus.INVALID_BLOCK_HASH:
-      case ExecutePayloadStatus.INVALID_TERMINAL_BLOCK:
       case ExecutePayloadStatus.ELERROR:
       case ExecutePayloadStatus.UNAVAILABLE:
         throw new BlockError(block, {
@@ -295,9 +294,32 @@ export async function verifyBlockStateTransition(
     //     in import block
     if (isMergeTransitionBlock) {
       const mergeBlock = block.message as bellatrix.BeaconBlock;
+      const mergeBlockHash = toHexString(
+        chain.config.getForkTypes(mergeBlock.slot).BeaconBlock.hashTreeRoot(mergeBlock)
+      );
       const powBlockRootHex = toHexString(mergeBlock.body.executionPayload.parentHash);
-      const powBlock = await chain.eth1.getPowBlock(powBlockRootHex);
-      const powBlockParent = powBlock && (await chain.eth1.getPowBlock(powBlock.parentHash));
+      const powBlock = await chain.eth1.getPowBlock(powBlockRootHex).catch((error) => {
+        // Lets just warn the user here, errors if any will be reported on
+        // `assertValidTerminalPowBlock` checks
+        chain.logger.warn(
+          "Error fetching terminal PoW block referred in the merge transition block",
+          {powBlockHash: powBlockRootHex, mergeBlockHash},
+          error
+        );
+        return null;
+      });
+      const powBlockParent =
+        powBlock &&
+        (await chain.eth1.getPowBlock(powBlock.parentHash).catch((error) => {
+          // Lets just warn the user here, errors if any will be reported on
+          // `assertValidTerminalPowBlock` checks
+          chain.logger.warn(
+            "Error fetching parent of the terminal PoW block referred in the merge transition block",
+            {powBlockParentHash: powBlock.parentHash, powBlock: powBlockRootHex, mergeBlockHash},
+            error
+          );
+          return null;
+        }));
 
       assertValidTerminalPowBlock(chain.config, mergeBlock, {executionStatus, powBlock, powBlockParent});
     }

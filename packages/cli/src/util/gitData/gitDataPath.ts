@@ -1,5 +1,11 @@
 import path from "node:path";
 import fs from "node:fs";
+import {fileURLToPath} from "node:url";
+
+// Global variable __dirname no longer available in ES6 modules.
+// Solutions: https://stackoverflow.com/questions/46745014/alternative-for-dirname-in-node-js-when-using-es6-modules
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Persist git data and distribute through NPM so CLI consumers can know exactly
 // at what commit was this src build. This is used in the metrics and to log initially.
@@ -8,8 +14,8 @@ import fs from "node:fs";
 //   in Github to resolve that version to a specific commit. While this is okay, git-data.json gives
 //   a gurantee of the exact commit at build time.
 //
-// - For NPM release (nightly): canary commits include the commit, so this feature is not really
-//   necessary. However, it's more cumbersome to have conditional logic on stable / nightly.
+// - For NPM release (dev): canary commits include the commit, so this feature is not really
+//   necessary. However, it's more cumbersome to have conditional logic on stable / dev.
 //
 // - For build from source: .git folder is available in the context of the built code, so it can extract
 //   branch and commit directly without the need for .git-data.json.

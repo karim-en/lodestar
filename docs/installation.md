@@ -10,7 +10,7 @@ Make sure to have [Yarn installed](https://classic.yarnpkg.com/en/docs/install).
 
 <!-- prettier-ignore-start -->
 !!! info
-    NodeJS versions < 12 are not supported by Lodestar.
+    NodeJS versions < 16.x are not supported by Lodestar. We currently recommend running NodeJS 16.x.
 <!-- prettier-ignore-end -->
 
 Clone the repo locally.
@@ -69,7 +69,7 @@ The [`chainsafe/lodestar`](https://hub.docker.com/r/chainsafe/lodestar) Docker H
 
 <!-- prettier-ignore-start -->
 !!! info
-    The Docker Hub image in run on CI every nightly release on `master`
+    The Docker Hub image in run on CI every dev release on `unstable`
 <!-- prettier-ignore-end -->
 
 Ensure you have Docker installed by issuing the command:

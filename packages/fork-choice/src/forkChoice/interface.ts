@@ -1,8 +1,8 @@
 import {EffectiveBalanceIncrements} from "@chainsafe/lodestar-beacon-state-transition";
 import {BeaconStateAllForks} from "@chainsafe/lodestar-beacon-state-transition";
 import {Epoch, Slot, ValidatorIndex, phase0, allForks, Root, RootHex} from "@chainsafe/lodestar-types";
-import {IProtoBlock, ExecutionStatus} from "../protoArray/interface";
-import {CheckpointWithHex} from "./store";
+import {IProtoBlock, ExecutionStatus} from "../protoArray/interface.js";
+import {CheckpointWithHex} from "./store.js";
 
 export type CheckpointHex = {
   epoch: Epoch;
@@ -77,7 +77,7 @@ export interface IForkChoice {
    * The supplied `attestation` **must** pass the `in_valid_indexed_attestation` function as it
    * will not be run here.
    */
-  onAttestation(attestation: phase0.IndexedAttestation): void;
+  onAttestation(attestation: phase0.IndexedAttestation, attDataRoot?: string): void;
   getLatestMessage(validatorIndex: ValidatorIndex): ILatestMessage | undefined;
   /**
    * Call `onTick` for all slots between `fcStore.getCurrentSlot()` and the provided `currentSlot`.

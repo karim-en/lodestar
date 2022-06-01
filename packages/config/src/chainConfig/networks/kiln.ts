@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import {fromHexString as b} from "@chainsafe/ssz";
-import {IChainConfig} from "../types";
-import {chainConfig as mainnet} from "../presets/mainnet";
+import {IChainConfig} from "../types.js";
+import {chainConfig as mainnet} from "../presets/mainnet.js";
 
 /* eslint-disable max-len */
 
@@ -22,7 +22,7 @@ export const kilnChainConfig: IChainConfig = {
   // Bellatrix
   BELLATRIX_FORK_VERSION: b("0x70000071"),
   BELLATRIX_FORK_EPOCH: 150,
-  TERMINAL_TOTAL_DIFFICULTY: BigInt(20000000000000),
+  TERMINAL_TOTAL_DIFFICULTY: BigInt("20000000000000"),
   // Sharding
   SHARDING_FORK_VERSION: b("0x03000000"),
   SHARDING_FORK_EPOCH: Infinity,

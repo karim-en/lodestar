@@ -8,20 +8,20 @@ import {
 import {ILogger} from "@chainsafe/lodestar-utils";
 import {routes} from "@chainsafe/lodestar-api";
 import {BitArray, CompositeViewDU, toHexString} from "@chainsafe/ssz";
-import {IBeaconDb} from "../../db";
-import {IMetrics} from "../../metrics";
-import {MapDef, pruneSetToMax} from "../../util/map";
-import {ChainEvent, ChainEventEmitter} from "../emitter";
+import {SYNC_COMMITTEE_SIZE} from "@chainsafe/lodestar-params";
+import {IBeaconDb} from "../../db/index.js";
+import {IMetrics} from "../../metrics/index.js";
+import {MapDef, pruneSetToMax} from "../../util/map.js";
+import {ChainEvent, ChainEventEmitter} from "../emitter.js";
+import {byteArrayEquals} from "../../util/bytes.js";
+import {ZERO_HASH} from "../../constants/index.js";
 import {
   getNextSyncCommitteeBranch,
   getSyncCommitteesWitness,
   getFinalizedRootProof,
   getCurrentSyncCommitteeBranch,
-} from "./proofs";
-import {PartialLightClientUpdate} from "./types";
-import {SYNC_COMMITTEE_SIZE} from "@chainsafe/lodestar-params";
-import {byteArrayEquals} from "../../util/bytes";
-import {ZERO_HASH} from "../../constants";
+} from "./proofs.js";
+import {PartialLightClientUpdate} from "./types.js";
 
 type DependantRootHex = RootHex;
 type BlockRooHex = RootHex;
@@ -428,6 +428,8 @@ export class LightClientServer {
    * ```
    *
    * 3. On new blocks use `block.body.sync_aggregate`, `block.parent_root` and `block.slot - 1`
+   *
+   * @param syncPeriod The sync period of the sync aggregate and signed block root
    */
   private async onSyncAggregate(
     syncPeriod: SyncPeriod,
@@ -443,6 +445,11 @@ export class LightClientServer {
       } else {
         throw Error("attestedData not available");
       }
+    }
+
+    const attestedPeriod = computeSyncPeriodAtSlot(attestedData.attestedHeader.slot);
+    if (syncPeriod !== attestedPeriod) {
+      throw new Error("attested data period different than signature period");
     }
 
     const headerUpdate: routes.lightclient.LightclientHeaderUpdate = {
@@ -506,7 +513,7 @@ export class LightClientServer {
       // Only checkpoint candidates are stored, and not all headers are guaranteed to be available
       const finalizedCheckpointRoot = attestedData.finalizedCheckpoint.root as Uint8Array;
       const finalizedHeader = await this.getFinalizedHeader(finalizedCheckpointRoot);
-      if (finalizedHeader) {
+      if (finalizedHeader && computeSyncPeriodAtSlot(finalizedHeader.slot) == syncPeriod) {
         // If finalizedHeader is available (should be most times) create a finalized update
         newPartialUpdate = {...attestedData, finalizedHeader, syncAggregate};
       } else {

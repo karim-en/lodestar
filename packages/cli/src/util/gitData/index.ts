@@ -2,7 +2,7 @@ import {execSync} from "node:child_process";
 
 // This file is created in the build step and is distributed through NPM
 // MUST be in sync with `-/gitDataPath.ts` and `package.json` files.
-import {readGitDataFile, GitData} from "./gitDataPath";
+import {readGitDataFile, GitData} from "./gitDataPath.js";
 
 /** Reads git data from a persisted file or local git data at build time. */
 export function readAndGetGitData(): GitData {
@@ -20,8 +20,14 @@ export function readAndGetGitData(): GitData {
     return {
       // If the CLI is run from source, prioritze current git data
       // over `.git-data.json` file, which might be stale here.
-      branch: currentGitData.branch ?? persistedGitData.branch ?? "",
-      commit: currentGitData.commit ?? persistedGitData.commit ?? "",
+      branch:
+        currentGitData.branch && currentGitData.branch.length > 0
+          ? currentGitData.branch
+          : persistedGitData.branch ?? "",
+      commit:
+        currentGitData.commit && currentGitData.commit.length > 0
+          ? currentGitData.commit
+          : persistedGitData.commit ?? "",
     };
   } catch (e) {
     return {
