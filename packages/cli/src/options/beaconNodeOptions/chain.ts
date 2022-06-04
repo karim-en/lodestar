@@ -6,6 +6,9 @@ export interface IChainArgs {
   "chain.blsVerifyAllMainThread": boolean;
   "chain.disableBlsBatchVerify": boolean;
   "chain.persistInvalidSszObjects": boolean;
+  // No need to define chain.persistInvalidSszObjects as part of IChainArgs
+  // as this is defined as part of IBeaconPaths
+  // "chain.persistInvalidSszObjectsDir": string;
   "chain.proposerBoostEnabled": boolean;
   "chain.defaultFeeRecipient": string;
   "chain.maxSkipSlots"?: number;
