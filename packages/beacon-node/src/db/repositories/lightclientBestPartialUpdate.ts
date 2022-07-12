@@ -20,6 +20,7 @@ export class BestPartialLightClientUpdateRepository extends Repository<SyncPerio
     finalizedCheckpoint: ssz.phase0.Checkpoint,
     finalizedHeader: ssz.phase0.BeaconBlockHeader,
     syncAggregate: ssz.altair.SyncAggregate,
+    signatureSlot: ssz.Slot,
   });
 
   typeNonFinalized = new ContainerType({
@@ -28,6 +29,7 @@ export class BestPartialLightClientUpdateRepository extends Repository<SyncPerio
     attestedHeader: ssz.phase0.BeaconBlockHeader,
     blockRoot: ssz.Root,
     syncAggregate: ssz.altair.SyncAggregate,
+    signatureSlot: ssz.Slot,
   });
 
   constructor(config: IChainForkConfig, db: IDatabaseController<Uint8Array, Uint8Array>) {

@@ -201,8 +201,10 @@ export class LightClientServer {
     // So rootSigned will always equal to the parentBlock.
     const signedBlockRoot = block.parentRoot;
     const syncPeriod = computeSyncPeriodAtSlot(block.slot);
+    // By default, the sync committee signs the previous slot
+    const signatureSlot = block.slot;
 
-    this.onSyncAggregate(syncPeriod, block.body.syncAggregate, signedBlockRoot).catch((e) => {
+    this.onSyncAggregate(syncPeriod, block.body.syncAggregate, signedBlockRoot, signatureSlot).catch((e) => {
       this.logger.error("Error onSyncAggregate", {}, e);
     });
 
@@ -279,7 +281,7 @@ export class LightClientServer {
         finalizedHeader: partialUpdate.finalizedHeader,
         finalityBranch: partialUpdate.finalityBranch,
         syncAggregate: partialUpdate.syncAggregate,
-        forkVersion: this.config.getForkVersion(partialUpdate.attestedHeader.slot),
+        signatureSlot: partialUpdate.signatureSlot,
       };
     } else {
       return {
@@ -289,7 +291,7 @@ export class LightClientServer {
         finalizedHeader: this.zero.finalizedHeader,
         finalityBranch: this.zero.finalityBranch,
         syncAggregate: partialUpdate.syncAggregate,
-        forkVersion: this.config.getForkVersion(partialUpdate.attestedHeader.slot),
+        signatureSlot: partialUpdate.signatureSlot,
       };
     }
   }
@@ -430,7 +432,8 @@ export class LightClientServer {
   private async onSyncAggregate(
     syncPeriod: SyncPeriod,
     syncAggregate: altair.SyncAggregate,
-    signedBlockRoot: Root
+    signedBlockRoot: Root,
+    signatureSlot: Slot
   ): Promise<void> {
     const signedBlockRootHex = toHexString(signedBlockRoot);
     const attestedData = this.prevHeadData.get(signedBlockRootHex);
@@ -451,6 +454,7 @@ export class LightClientServer {
     const headerUpdate: routes.lightclient.LightclientOptimisticHeaderUpdate = {
       attestedHeader: attestedData.attestedHeader,
       syncAggregate,
+      signatureSlot,
     };
 
     // Emit update
@@ -478,13 +482,14 @@ export class LightClientServer {
           finalizedHeader,
           syncAggregate,
           finalityBranch: attestedData.finalityBranch,
+          signatureSlot,
         };
         this.emitter.emit(ChainEvent.lightclientFinalizedUpdate, this.finalized);
       }
     }
 
     // Check if this update is better, otherwise ignore
-    await this.maybeStoreNewBestPartialUpdate(syncPeriod, syncAggregate, attestedData);
+    await this.maybeStoreNewBestPartialUpdate(syncPeriod, syncAggregate, attestedData, signatureSlot);
   }
 
   /**
@@ -494,7 +499,8 @@ export class LightClientServer {
   private async maybeStoreNewBestPartialUpdate(
     syncPeriod: SyncPeriod,
     syncAggregate: altair.SyncAggregate,
-    attestedData: SyncAttestedData
+    attestedData: SyncAttestedData,
+    signatureSlot: Slot
   ): Promise<void> {
     const prevBestUpdate = await this.db.bestPartialLightClientUpdate.get(syncPeriod);
     if (prevBestUpdate && !isBetterUpdate(prevBestUpdate, syncAggregate, attestedData)) {
@@ -511,13 +517,13 @@ export class LightClientServer {
       const finalizedHeader = await this.getFinalizedHeader(finalizedCheckpointRoot);
       if (finalizedHeader && computeSyncPeriodAtSlot(finalizedHeader.slot) == syncPeriod) {
         // If finalizedHeader is available (should be most times) create a finalized update
-        newPartialUpdate = {...attestedData, finalizedHeader, syncAggregate};
+        newPartialUpdate = {...attestedData, finalizedHeader, syncAggregate, signatureSlot};
       } else {
         // If finalizedHeader is not available (happens on startup) create a non-finalized update
-        newPartialUpdate = {...attestedData, isFinalized: false, syncAggregate};
+        newPartialUpdate = {...attestedData, isFinalized: false, syncAggregate, signatureSlot};
       }
     } else {
-      newPartialUpdate = {...attestedData, syncAggregate};
+      newPartialUpdate = {...attestedData, syncAggregate, signatureSlot};
     }
 
     // attestedData and the block of syncAggregate may not be in same sync period

@@ -8,6 +8,7 @@ import {RouteDef, TypeJson} from "../../utils/index.js";
 export type LightclientOptimisticHeaderUpdate = {
   syncAggregate: altair.SyncAggregate;
   attestedHeader: phase0.BeaconBlockHeader;
+  signatureSlot: Slot;
 };
 
 export type LightclientFinalizedUpdate = {
@@ -15,6 +16,7 @@ export type LightclientFinalizedUpdate = {
   finalizedHeader: phase0.BeaconBlockHeader;
   finalityBranch: Uint8Array[];
   syncAggregate: altair.SyncAggregate;
+  signatureSlot: Slot;
 };
 
 export enum EventType {
@@ -147,6 +149,7 @@ export function getTypeByEvent(): {[K in EventType]: Type<EventData[K]>} {
       {
         syncAggregate: ssz.altair.SyncAggregate,
         attestedHeader: ssz.phase0.BeaconBlockHeader,
+        signatureSlot: ssz.Slot,
       },
       {jsonCase: "eth2"}
     ),
@@ -156,6 +159,7 @@ export function getTypeByEvent(): {[K in EventType]: Type<EventData[K]>} {
         finalizedHeader: ssz.phase0.BeaconBlockHeader,
         finalityBranch: new VectorCompositeType(ssz.Bytes32, FINALIZED_ROOT_DEPTH),
         syncAggregate: ssz.altair.SyncAggregate,
+        signatureSlot: ssz.Slot,
       },
       {jsonCase: "eth2"}
     ),

@@ -115,6 +115,7 @@ export function getReturnTypes(): ReturnTypes<Api> {
     {
       syncAggregate: ssz.altair.SyncAggregate,
       attestedHeader: ssz.phase0.BeaconBlockHeader,
+      signatureSlot: ssz.Slot,
     },
     {jsonCase: "eth2"}
   );
@@ -125,6 +126,7 @@ export function getReturnTypes(): ReturnTypes<Api> {
       finalizedHeader: ssz.phase0.BeaconBlockHeader,
       finalityBranch: new VectorCompositeType(ssz.Bytes32, FINALIZED_ROOT_DEPTH),
       syncAggregate: ssz.altair.SyncAggregate,
+      signatureSlot: ssz.Slot,
     },
     {jsonCase: "eth2"}
   );
